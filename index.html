@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸运大转盘</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        @media (min-width: 768px) {
+            .container { flex-direction: row; justify-content: center; align-items: flex-start; }
+        }
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+        #wheel { width: 100%; height: 100%; }
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4444;
+            z-index: 10;
+        }
+        .center-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffd700, #ffaa00);
+            border: 4px solid #fff;
+            color: #8b4513;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 5;
+        }
+        .center-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .prize-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 350px;
+        }
+        @media (min-width: 768px) {
+            .prize-list { grid-template-columns: 1fr; max-width: 280px; }
+        }
+        .prize-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid rgba(255,215,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .prize-item.active {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffd700;
+        }
+        .prize-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+        .prize-text { color: #fff; font-size: 13px; }
+        .prize-name { font-weight: bold; color: #ffd700; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #ffd700;
+        }
+        .modal-title { font-size: 26px; color: #ffd700; margin-bottom: 20px; font-weight: bold; }
+        .modal-prize-name { font-size: 18px; color: #fff; margin-bottom: 20px; }
+        .modal-image-fallback {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd700;
+            font-size: 80px;
+        }
+        .modal-btn {
+            background: linear-gradient(145deg, #ffd700, #ffaa00);
+            border: none;
+            padding: 12px 40px;
+            border-radius: 25px;
+            color: #8b4513;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">幸运大转盘</h1>
+    <div class="container">
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <canvas id="wheel"></canvas>
+            <button class="center-btn" onclick="startSpin()">开始<br>抽奖</button>
+        </div>
+        <div class="prize-list">
+            <div class="prize-item" data-index="0">
+                <div class="prize-icon" style="background: #e74c3c;">一等</div>
+                <div class="prize-text"><div class="prize-name">一等奖</div><div>宝马木菲城堡干红葡萄酒</div></div>
+            </div>
+            <div class="prize-item" data-index="1">
+                <div class="prize-icon" style="background: #e67e22;">二等</div>
+                <div class="prize-text"><div class="prize-name">二等奖</div><div>优艺尚好梦羽丝枕1对</div></div>
+            </div>
+            <div class="prize-item" data-index="2">
+                <div class="prize-icon" style="background: #f1c40f;">三等</div>
+                <div class="prize-text"><div class="prize-name">三等奖</div><div>优美乐眼部震动按摩仪</div></div>
+            </div>
+            <div class="prize-item" data-index="3">
+                <div class="prize-icon" style="background: #27ae60;">四等</div>
+                <div class="prize-text"><div class="prize-name">四等奖</div><div>岩尚臻品金骏眉红茶50克</div></div>
+            </div>
+            <div class="prize-item" data-index="4">
+                <div class="prize-icon" style="background: #3498db;">五等</div>
+                <div class="prize-text"><div class="prize-name">五等奖</div><div>韩国现代桌面加湿器嘟嘟猫</div></div>
+            </div>
+            <div class="prize-item" data-index="5">
+                <div class="prize-icon" style="background: #9b59b6;">六等</div>
+                <div class="prize-text"><div class="prize-name">六等奖</div><div>盎厘斯桌面小风扇</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title">恭喜您获得</div>
+            <div class="modal-prize-name" id="modalPrizeName"></div>
+            <div class="modal-image-fallback" id="modalImageFallback">🎁</div>
+            <button class="modal-btn" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+    <script>
+        const prizes = [
+            { name: '一等奖：宝马木菲城堡干红葡萄酒', color: '#e74c3c', angle: 36, icon: '🍷' },
+            { name: '二等奖：优艺尚好梦羽丝枕1对', color: '#e67e22', angle: 36, icon: '🛏️' },
+            { name: '三等奖：优美乐眼部震动按摩仪', color: '#f1c40f', angle: 72, icon: '👁️' },
+            { name: '四等奖：岩尚臻品金骏眉红茶50克', color: '#27ae60', angle: 108, icon: '🍵' },
+            { name: '五等奖：韩国现代桌面加湿器嘟嘟猫', color: '#3498db', angle: 72, icon: '💨' },
+            { name: '六等奖：盎厘斯桌面小风扇', color: '#9b59b6', angle: 36, icon: '🌀' }
+        ];
+        let currentAngle = 0;
+        const prizeAngles = prizes.map(prize => {
+            const start = currentAngle;
+            currentAngle += prize.angle;
+            return { start, end: currentAngle, ...prize };
+        });
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        let rotation = 0;
+        let isSpinning = false;
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = container.offsetWidth;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            ctx.scale(dpr, dpr);
+            drawWheel();
+        }
+        function drawWheel() {
+            const size = canvas.offsetWidth;
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size / 2 - 10;
+            ctx.clearRect(0, 0, size, size);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation * Math.PI / 180);
+            prizeAngles.forEach((prize, index) => {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                const startRad = (prize.start - 90) * Math.PI / 180;
+                const endRad = (prize.end - 90) * Math.PI / 180;
+                ctx.arc(0, 0, radius, startRad, endRad);
+                ctx.closePath();
+                ctx.fillStyle = prize.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                const textAngle = (prize.start + prize.end) / 2 - 90;
+                const textRad = textAngle * Math.PI / 180;
+                const textRadius = radius * 0.65;
+                const textX = Math.cos(textRad) * textRadius;
+                const textY = Math.sin(textRad) * textRadius;
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(textRad + Math.PI / 2);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 4;
+                const levels = ['一', '二', '三', '四', '五', '六'];
+                ctx.fillText('第' + levels[index] + '等奖', 0, 0);
+                ctx.restore();
+            });
+            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+        }
+        function startSpin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.querySelector('.center-btn').disabled = true;
+            const random = Math.random() * 100;
+            let cumulative = 0;
+            let selectedIndex = 0;
+            const probabilities = [10, 10, 20, 30, 20, 10];
+            for (let i = 0; i < probabilities.length; i++) {
+                cumulative += probabilities[i];
+                if (random <= cumulative) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            const prize = prizeAngles[selectedIndex];
+            const targetRotation = 360 * 5 + (360 - (prize.start + prize.end) / 2);
+            const startRotation = rotation;
+            const duration = 4000;
+            const startTime = Date.now();
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                rotation = startRotation + (targetRotation - startRotation) * easeOut;
+                drawWheel();
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    document.querySelector('.center-btn').disabled = false;
+                    showResult(selectedIndex);
+                }
+            }
+            animate();
+        }
+        function showResult(index) {
+            const prize = prizes[index];
+            document.getElementById('modalPrizeName').textContent = prize.name;
+            document.getElementById('modalImageFallback').textContent = prize.icon;
+            document.getElementById('modal').classList.add('show');
+            document.querySelectorAll('.prize-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+            document.querySelectorAll('.prize-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
