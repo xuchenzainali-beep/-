@@ -1,1 +1,1 @@
-大转盘
+lucky-wheel
