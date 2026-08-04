@@ -1,3 +1,5 @@
+index.html：
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -129,17 +131,13 @@
         }
         .modal-title { font-size: 26px; color: #ffd700; margin-bottom: 20px; font-weight: bold; }
         .modal-prize-name { font-size: 18px; color: #fff; margin-bottom: 20px; }
-        .modal-image-fallback {
+        .modal-image {
             width: 200px;
             height: 200px;
+            object-fit: contain;
             border-radius: 10px;
             margin-bottom: 20px;
-            background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffd700;
-            font-size: 80px;
+            background: #fff;
         }
         .modal-btn {
             background: linear-gradient(145deg, #ffd700, #ffaa00);
@@ -192,18 +190,18 @@
         <div class="modal-content">
             <div class="modal-title">恭喜您获得</div>
             <div class="modal-prize-name" id="modalPrizeName"></div>
-            <div class="modal-image-fallback" id="modalImageFallback">🎁</div>
+            <img class="modal-image" id="modalImage" src="" alt="奖品">
             <button class="modal-btn" onclick="closeModal()">确定</button>
         </div>
     </div>
     <script>
         const prizes = [
-            { name: '一等奖：宝马木菲城堡干红葡萄酒', color: '#e74c3c', angle: 36, icon: '🍷' },
-            { name: '二等奖：优艺尚好梦羽丝枕1对', color: '#e67e22', angle: 36, icon: '🛏️' },
-            { name: '三等奖：优美乐眼部震动按摩仪', color: '#f1c40f', angle: 72, icon: '👁️' },
-            { name: '四等奖：岩尚臻品金骏眉红茶50克', color: '#27ae60', angle: 108, icon: '🍵' },
-            { name: '五等奖：韩国现代桌面加湿器嘟嘟猫', color: '#3498db', angle: 72, icon: '💨' },
-            { name: '六等奖：盎厘斯桌面小风扇', color: '#9b59b6', angle: 36, icon: '🌀' }
+            { name: '一等奖：宝马木菲城堡干红葡萄酒', color: '#e74c3c', angle: 36, image: 'prize1.jpg' },
+            { name: '二等奖：优艺尚好梦羽丝枕1对', color: '#e67e22', angle: 36, image: 'prize2.jpg' },
+            { name: '三等奖：优美乐眼部震动按摩仪', color: '#f1c40f', angle: 72, image: 'prize3.jpg' },
+            { name: '四等奖：岩尚臻品金骏眉红茶50克', color: '#27ae60', angle: 108, image: 'prize4.jpg' },
+            { name: '五等奖：韩国现代桌面加湿器嘟嘟猫', color: '#3498db', angle: 72, image: 'prize5.jpg' },
+            { name: '六等奖：盎厘斯桌面小风扇', color: '#9b59b6', angle: 36, image: 'prize6.jpg' }
         ];
         let currentAngle = 0;
         const prizeAngles = prizes.map(prize => {
@@ -311,7 +309,7 @@
         function showResult(index) {
             const prize = prizes[index];
             document.getElementById('modalPrizeName').textContent = prize.name;
-            document.getElementById('modalImageFallback').textContent = prize.icon;
+            document.getElementById('modalImage').src = prize.image;
             document.getElementById('modal').classList.add('show');
             document.querySelectorAll('.prize-item').forEach((item, i) => {
                 item.classList.toggle('active', i === index);
